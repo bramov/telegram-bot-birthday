@@ -29,7 +29,7 @@ bot.on('new_chat_members', (msg) => {
 })
 
 // bot.sendMessage(-534616419, 'тестовое сообщение в чат с айди -534616419')
-cron.schedule('0 9 * * *', async () => {
+cron.schedule('0 10 * * *', async () => {
   const date = new Date();
   const user = await User.findOne({
     day: date.getDate() + '',
