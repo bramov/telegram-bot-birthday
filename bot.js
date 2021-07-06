@@ -1,3 +1,4 @@
+process.env["NTBA_FIX_319"] = 1;
 const TelegramBot = require('node-telegram-bot-api');
 const cron = require('node-cron');
 require('dotenv').config();
@@ -5,7 +6,7 @@ const mongoose = require('mongoose');
 const User = require('./models/User');
 
 const token = process.env.TELEGRAM_KEY;
-const { greetingByName, greetingWithoutName } = require('./utils/text')
+const { greetingByName, greetingWithoutName, months } = require('./utils/text')
 
 
 const bot = new TelegramBot(token, { polling: true });
@@ -26,22 +27,64 @@ bot.on('new_chat_members', (msg) => {
   }
 
   bot.sendMessage(id, response);
+});
+
+bot.onText(/\/addbirthday/, async (msg) => {
+  const message = msg.text.split(' ');
+  if (message.length !== 4) {
+    bot.sendMessage(msg.chat.id, 'Неверный формат, используйте /addbirthday Ivan 12 3, чтобы добавить др пользователя с ником Ivan 12 марта.');
+    return;
+  }
+  const userExists = await User.findOne({
+    name: message[1],
+  });
+  if (userExists) {
+    bot.sendMessage(msg.chat.id, `Пользователь с ником ${userExists.name} уже существует`)
+  } else {
+    const person = new User({
+      name: message[1],
+      day: message[2],
+      month: message[3],
+    })
+    await person.save();
+    bot.sendMessage(msg.chat.id, `Сохранил др пользователя ${person.name} - ${person.day} ${months(person.month - 1)}`)
+  }
+});
+
+bot.onText(/\/removebirthday/, async (msg) => {
+  const message = msg.text.split(' ');
+  if (message.length !== 2) {
+    bot.sendMessage(msg.chat.id, 'Неверный формат, используйте /removebirthday Ivan, чтобы удалить др пользователя Ivan.');
+    return;
+  }
+  const userExists = await User.findOne({
+    name: message[1],
+  })
+  if (userExists) {
+    await User.deleteOne({
+      name: message[1],
+    })
+    bot.sendMessage(msg.chat.id, `Пользователь удален!`)
+  } else {
+    bot.sendMessage(msg.chat.id, `Пользователь с ником ${message[1]} не найден. Проверьте правильность написания ника.`)
+  }
 })
 
-// bot.sendMessage(-534616419, 'тестовое сообщение в чат с айди -534616419')
-cron.schedule('0 10 * * *', async () => {
+
+cron.schedule('16 10 * * *', async () => {
+  console.log('cron work')
   const date = new Date();
-  const user = await User.findOne({
+  const users = await User.find({
     day: date.getDate() + '',
     month: (date.getMonth() + 1) + ''
   })
-  console.log(date.getDate() + '');
-  console.log((date.getMonth() + 1) + '');
-  console.log(user);
-  if (user) {
-    bot.sendMessage(-510092083, `Сегодня день рождения у пользователя ${user.name}! От всего чата желаем ему здоровья!`)
-  } else {
-    bot.sendMessage(-510092083, 'Сегодня ни у кого нет др');
+
+  console.log(users.length);
+  if (users.length > 1) {
+    const userNicknames = users.map(el => el.name).join(', ');
+    bot.sendMessage(-510092083, `Сегодня день рождения у пользователей ${userNicknames}. Группа PACKINFO поздравляет Вас!`)
+  } else if (users.length === 1 && users[0].name) {
+    bot.sendMessage(-510092083, `Сегодня день рождения у пользователя ${users[0].name}! Группа PACKINFO поздравляет Вас!`)
   }
-  //bot.sendMessage(-510092083, 'сейчас ТЕСТ утра и я делаю проверку др');
+
 })

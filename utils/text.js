@@ -15,5 +15,10 @@ const greetingByName = (name) => {
   \n\rПриятного общения!
   `
 }
+const months = (index) => [
+  'января', 'февраля', 'марта', 'апреля',
+  'мая', 'июня', 'июля', 'августа', 'сентября',
+  'октября', 'ноября', 'декабря'
+][index];
 
-module.exports = { greetingByName, greetingWithoutName };
+module.exports = { greetingByName, greetingWithoutName, months };
