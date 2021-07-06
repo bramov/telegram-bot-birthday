@@ -71,20 +71,19 @@ bot.onText(/\/removebirthday/, async (msg) => {
 })
 
 
-cron.schedule('16 10 * * *', async () => {
-  console.log('cron work')
+cron.schedule('0 10 * * *', async () => {
+
   const date = new Date();
   const users = await User.find({
     day: date.getDate() + '',
     month: (date.getMonth() + 1) + ''
   })
 
-  console.log(users.length);
   if (users.length > 1) {
     const userNicknames = users.map(el => el.name).join(', ');
-    bot.sendMessage(-510092083, `Сегодня день рождения у пользователей ${userNicknames}. Группа PACKINFO поздравляет Вас!`)
+    bot.sendMessage(-521270190, `Сегодня день рождения у пользователей ${userNicknames}. Группа PACKINFO поздравляет Вас!`)
   } else if (users.length === 1 && users[0].name) {
-    bot.sendMessage(-510092083, `Сегодня день рождения у пользователя ${users[0].name}! Группа PACKINFO поздравляет Вас!`)
+    bot.sendMessage(-521270190, `Сегодня день рождения у пользователя ${users[0].name}! Группа PACKINFO поздравляет Вас!`)
   }
 
 })
